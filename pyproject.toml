@@ -1,0 +1,30 @@
+[project]
+name = "knwl-api"
+version = "0.2.0"
+description = "A flexible Graph RAG package with advanced ingestion and augmentation strategies."
+authors = [
+    { name = "Francois Vanderseypen (Orbifold Consulting)", email = "swa@orbifold.net" }
+]
+
+readme = "README.md"
+
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "fastapi>=0.121.0",
+    "knwl>=1.7.1",
+    "python-multipart>=0.0.20",
+    "uvicorn>=0.38.0",
+]
+
+
+[dependency-groups]
+dev = [
+    "faker>=37.12.0",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+    "pytest-mock>=3.15.1",
+]
+[project.urls]
+Homepage = "https://github.com/Orbifold/knwl"
+Repository = "https://github.com/Orbifold/knwl"
+Documentation = "https://github.com/Orbifold/knwl"
