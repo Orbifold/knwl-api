@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from fastapi import Request
+from knwl import KnwlParams, KnwlAnswer, KnwlContext
 
 from knwl_api.models.JobStatus import JobStatus, JobResponse
 from knwl_api.routes.kg import service
@@ -50,11 +51,15 @@ async def delete_node_by_id(id: str):
 
 @router.post("/ingest", description="Ingests data into the knowledge graph.", response_model=JobResponse)
 async def ingest_data(request: Request):
+    """
+    Ingests data into the knowledge graph.
+    Expects a JSON body with a 'text' field, optionally 'name', 'description'.
+    """
     try:
         data = await request.json()
         if not "text" in data:
             raise HTTPException(status_code=400, detail="Missing 'text' field in request body")
-        job_id = await service.add_job("ingest", **data)
+        job_id = await service.add_job("ingest", data)
 
         return JobResponse(job_id=job_id, message="Ingestion job started successfully")
     except Exception as e:
@@ -77,6 +82,10 @@ async def get_job_status(job_id: str):
 
 @router.post("/fact", description="Adds a fact to the knowledge graph.", response_model=JobResponse)
 async def add_fact(request: Request):
+    """
+    Adds a fact to the knowledge graph.
+    Expects a JSON body with 'name', 'content', and 'type' fields.
+    """
     try:
         data = await request.json()
         if not "name" in data:
@@ -89,5 +98,43 @@ async def add_fact(request: Request):
 
         return JobResponse(job_id=job_id, message="Fact job started successfully")
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/ask", description="Ask a question.", response_model=KnwlAnswer)
+async def ask_question(request: Request):
+    """
+    Asks a question to the knowledge graph.
+    Expects a JSON body with a 'question' field and, optionally, a 'strategy' field.
+    Note: this is just a utility, you likely benefit more from the augment method in your RAG flow.
+    """
+    try:
+        data = await request.json()
+        if not "question" in data:
+            raise HTTPException(status_code=400, detail="Missing 'question' field in request body")
+        if not "strategy" in data:
+            data["strategy"] = KnwlParams.model_fields["strategy"].default
+        answer = await service.ask_question(data["question"], data["strategy"])
+
+        return answer
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/augment", description="Graph augmentation of the given question.", response_model=KnwlContext)
+async def augment_text(request: Request):
+    """
+    Augments the given text using the knowledge graph.
+    Expects a JSON body with a 'question' field and, optionally, a 'strategy' field.
+    """
+    try:
+        data = await request.json()
+        if not "question" in data:
+            raise HTTPException(status_code=400, detail="Missing 'text' field in request body")
+        if not "strategy" in data:
+            data["strategy"] = KnwlParams.model_fields["strategy"].default
+        context = await service.augment(data["question"], data["strategy"])
+        return context
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

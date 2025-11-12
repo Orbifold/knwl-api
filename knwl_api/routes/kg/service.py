@@ -2,7 +2,7 @@ import asyncio
 import time
 from typing import Dict
 
-from knwl import Knwl, KnwlInput
+from knwl import Knwl, KnwlInput, KnwlParams, KnwlAnswer, KnwlContext
 
 from knwl_api.models.JobStatus import JobStatus, JobState
 from knwl_api.models.KnwlFact import KnwlFact
@@ -43,7 +43,7 @@ async def process_ingest_job(job_id: str, input: KnwlInput):
 
         # Update job state to completed
         jobs[job_id].state = JobState.COMPLETED
-        jobs[job_id].result = result
+        jobs[job_id].result = result.model_dump(mode="dict")
         jobs[job_id].updated_at = time.time()
     except Exception as e:
         # Update job state to failed
@@ -96,3 +96,17 @@ async def get_node_by_id(id: str):
 async def delete_node_by_id(id: str):
     """Deletes a node by its Id."""
     return await knwl.delete_node_by_id(id)
+
+
+async def ask_question(question: str, strategy: str = None) -> KnwlAnswer:
+    if strategy is None:
+        strategy = KnwlParams.model_fields["strategy"].default
+    input = KnwlInput(text=question, params=KnwlParams(strategy=strategy))
+    return await knwl.ask(input)
+
+
+async def augment(text: str, strategy: str = None) -> KnwlContext:
+    if strategy is None:
+        strategy = KnwlParams.model_fields["strategy"].default
+    input = KnwlInput(text=text, params=KnwlParams(strategy=strategy))
+    return await knwl.augment(input)
