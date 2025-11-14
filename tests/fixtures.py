@@ -3,6 +3,7 @@ import pytest
 from faker import Faker
 from fastapi.testclient import TestClient
 
+from fastmcp import Client
 
 fake = Faker()
 
@@ -16,4 +17,10 @@ def app():
 @pytest.fixture(autouse=True, scope="module")
 def client(app):
     client = TestClient(app)
+    return client
+
+
+@pytest.fixture(autouse=True, scope="module")
+def mcp_client(app):
+    client = Client("http://localhost:9030/mcp/")
     return client

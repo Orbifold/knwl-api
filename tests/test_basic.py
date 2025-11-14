@@ -93,7 +93,7 @@ async def test_ask(client):
 
 
 @pytest.mark.asyncio
-async def test_ask(client):
+async def test_augment(client):
     payload = {"question": "Who did Boltzmann not get along with in Vienna?"}
     response = client.post("/kg/augment", json=payload)
     assert response.status_code == 200

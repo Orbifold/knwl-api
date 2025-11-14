@@ -99,6 +99,9 @@ async def delete_node_by_id(id: str):
 
 
 async def ask_question(question: str, strategy: str = None) -> KnwlAnswer:
+    """
+    Asks a question to the knowledge graph.
+    """
     if strategy is None:
         strategy = KnwlParams.model_fields["strategy"].default
     input = KnwlInput(text=question, params=KnwlParams(strategy=strategy))
@@ -106,6 +109,9 @@ async def ask_question(question: str, strategy: str = None) -> KnwlAnswer:
 
 
 async def augment(text: str, strategy: str = None) -> KnwlContext:
+    """
+    Augments the given text using the knowledge graph.k
+    """
     if strategy is None:
         strategy = KnwlParams.model_fields["strategy"].default
     input = KnwlInput(text=text, params=KnwlParams(strategy=strategy))
