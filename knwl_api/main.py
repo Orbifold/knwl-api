@@ -2,11 +2,14 @@ from importlib.metadata import version
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastmcp import FastMCP
 from starlette.responses import JSONResponse
 
 knwl_version = version("knwl")
 
 from knwl_api.routes import register_routes
+from knwl_api.mcp_server import mcp_app
+ 
 
 # @formatter:off
 app = FastAPI(
@@ -14,9 +17,10 @@ app = FastAPI(
     summary="Knwl Web Services",
     version=knwl_version,
     description="The Knwl class is just a basic example of how you can assemble a graph RAG gateway for ingestion and augmentation. This API is a wrapper around the Knwl class and can be used to interact with the knowledge graph.",
-    docs_url= "/docs" ,
-    redoc_url="/redoc" ,
+    docs_url="/docs",
+    redoc_url="/redoc",
     openapi_url="/api/openapi.json",
+    lifespan=mcp_app.lifespan,  # CRITICAL: Pass MCP's lifespan to FastAPI
 )
 
 
@@ -29,11 +33,14 @@ app.add_middleware(
     expose_headers=[
         "X-qa-Id",  # custom header for QA ID
         "X-service-name",  # custom header for AZ service name
-        "X-from-cache" # when using load testing
+        "X-from-cache",  # when using load testing
     ],
 )
 # app.add_middleware(BaseHTTPMiddleware, dispatch=authentication_middleware)
 register_routes(app)
+
+# Mount MCP app at root - it provides /mcp route
+app.mount("/", mcp_app)
 
 
 @app.get("/", tags=["Root"])
@@ -43,9 +50,16 @@ async def root():
     """
     return JSONResponse(f"Knwl API v{knwl_version}", status_code=200)
 
+
 @app.get("/info", tags=["Info"])
 async def info():
     """
     Info endpoint that returns project information.
     """
     return JSONResponse(f"Knwl API v{knwl_version}", status_code=200)
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=9030)
